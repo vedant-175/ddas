@@ -1,175 +1,205 @@
-// Initialize the hash table (Object) for storing download links
-let downloadLinksTable = {};
+function getStorage(callback) {
+    chrome.storage.local.get({ downloadLinksTable: {}, pendingDownloads: {} }, callback);
+}
 
-// Function to inject a custom modal popup into the active tab
+function setStorage(data, callback) {
+    chrome.storage.local.set(data, callback);
+}
+
+function normalizeUrl(url) {
+    try {
+        const parsed = new URL(url);
+        parsed.hash = '';
+        parsed.protocol = 'https:';
+        parsed.searchParams.sort();
+        return parsed.toString().replace(/\/$/, '').toLowerCase();
+    } catch (e) {
+        return url.trim().toLowerCase();
+    }
+}
+
+// -------------------------------------------------------
+// Check if a tab URL is injectable (not a chrome:// page,
+// not a PDF viewer, not a new tab, not an extension page)
+// -------------------------------------------------------
+function isInjectableUrl(url) {
+    if (!url) return false;
+    const blocked = ['chrome://', 'chrome-extension://', 'about:', 'data:', 'file://'];
+    return !blocked.some(prefix => url.startsWith(prefix));
+}
+
+// -------------------------------------------------------
+// Inject modal — with fallback: if active tab is not
+// injectable, find the first normal tab and use that.
+// -------------------------------------------------------
 function showAlertInActiveTab(downloadId, downloadUrl) {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-        const activeTab = tabs[0];
-        chrome.scripting.executeScript({
-            target: { tabId: activeTab.id },
-            func: showCustomModal, // Function to execute
-            args: [downloadId, downloadUrl] // Pass the download ID and URL to the function
-        });
+        const activeTab = tabs && tabs[0];
+
+        if (activeTab && isInjectableUrl(activeTab.url)) {
+            // Happy path: active tab is a normal web page
+            injectModal(activeTab.id, downloadId, downloadUrl);
+        } else {
+            // Fallback: active tab is chrome://, PDF viewer, new tab, etc.
+            // Find the first normal web tab we can inject into
+            console.warn('DDAS: Active tab is not injectable (url:', activeTab && activeTab.url, '). Searching for a fallback tab...');
+            chrome.tabs.query({ currentWindow: true }, function (allTabs) {
+                const injectableTab = allTabs.find(t => isInjectableUrl(t.url));
+                if (injectableTab) {
+                    // Focus that tab so the user sees the modal
+                    chrome.tabs.update(injectableTab.id, { active: true }, function () {
+                        injectModal(injectableTab.id, downloadId, downloadUrl);
+                    });
+                } else {
+                    // No injectable tab at all — use Chrome notification as last resort
+                    console.warn('DDAS: No injectable tab found. Showing notification instead.');
+                    chrome.notifications.create({
+                        type: 'basic',
+                        iconUrl: 'icon.png',
+                        title: '⚠️ DDAS — Duplicate Download Blocked',
+                        message: `This file was already downloaded:\n${downloadUrl}`,
+                        priority: 2
+                    });
+                }
+            });
+        }
     });
 }
 
-// Function that will be injected into the page to create a custom modal popup
+function injectModal(tabId, downloadId, downloadUrl) {
+    chrome.scripting.executeScript({
+        target: { tabId },
+        func: showCustomModal,
+        args: [downloadId, downloadUrl]
+    }, function (results) {
+        if (chrome.runtime.lastError) {
+            console.error('DDAS: Script injection failed:', chrome.runtime.lastError.message);
+        } else {
+            console.log('DDAS: Modal injected successfully into tab', tabId);
+        }
+    });
+}
+
+// -------------------------------------------------------
+// Modal UI injected into the page
+// -------------------------------------------------------
 function showCustomModal(downloadId, downloadUrl) {
-    // Remove any existing modal if already present
-    const existingModal = document.getElementById('download-duplicate-modal');
-    if (existingModal) {
-        existingModal.remove();
-    }
+    const existingModal = document.getElementById('ddas-duplicate-modal');
+    if (existingModal) existingModal.remove();
 
-    // Create the modal container
     const modal = document.createElement('div');
-    modal.id = 'download-duplicate-modal';
-    modal.style.position = 'fixed';
-    modal.style.left = '0';
-    modal.style.top = '0';
-    modal.style.width = '100vw';
-    modal.style.height = '100vh';
-    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-    modal.style.zIndex = '9999';
-    modal.style.display = 'flex';
-    modal.style.justifyContent = 'center';
-    modal.style.alignItems = 'center';
+    modal.id = 'ddas-duplicate-modal';
+    Object.assign(modal.style, {
+        position: 'fixed', left: '0', top: '0',
+        width: '100vw', height: '100vh',
+        backgroundColor: 'rgba(0,0,0,0.55)',
+        zIndex: '2147483647',
+        display: 'flex', justifyContent: 'center', alignItems: 'center',
+        fontFamily: 'sans-serif'
+    });
 
-    // Create the modal content
-    const modalContent = document.createElement('div');
-    modalContent.style.backgroundColor = '#fff';
-    modalContent.style.padding = '20px';
-    modalContent.style.borderRadius = '10px';
-    modalContent.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
-    modalContent.style.textAlign = 'center';
+    const card = document.createElement('div');
+    Object.assign(card.style, {
+        backgroundColor: '#fff', padding: '28px 32px',
+        borderRadius: '12px', boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
+        maxWidth: '420px', width: '90%', textAlign: 'center'
+    });
 
-    // Add the extension name
     const header = document.createElement('h2');
-    header.textContent = 'Extension';
-    modalContent.appendChild(header);
+    header.textContent = '⚠️ DDAS — Duplicate Download Detected';
+    Object.assign(header.style, { margin: '0 0 12px', fontSize: '18px', color: '#b45309' });
+    card.appendChild(header);
 
-    // Add the message
     const message = document.createElement('p');
-    message.textContent = `Duplicate download detected for URL: ${downloadUrl}`;
-    modalContent.appendChild(message);
+    message.textContent = 'This file has already been downloaded before:';
+    Object.assign(message.style, { margin: '0 0 6px', color: '#444' });
+    card.appendChild(message);
 
-    // Add "Cancel Download" button
+    const urlBox = document.createElement('p');
+    urlBox.textContent = downloadUrl;
+    Object.assign(urlBox.style, {
+        wordBreak: 'break-all', fontSize: '12px', color: '#666',
+        background: '#f3f4f6', padding: '8px', borderRadius: '6px',
+        margin: '0 0 20px'
+    });
+    card.appendChild(urlBox);
+
+    const hint = document.createElement('p');
+    hint.textContent = 'Do you still want to download it?';
+    Object.assign(hint.style, { margin: '0 0 20px', fontWeight: 'bold', color: '#222' });
+    card.appendChild(hint);
+
+    const btnRow = document.createElement('div');
+    Object.assign(btnRow.style, { display: 'flex', gap: '12px', justifyContent: 'center' });
+
     const cancelButton = document.createElement('button');
     cancelButton.textContent = 'Cancel Download';
-    cancelButton.style.marginRight = '10px';
-    cancelButton.onclick = function() {
-        // Call the Chrome API to cancel the download
-        chrome.runtime.sendMessage({ action: 'cancelDownload', downloadId: downloadId });
-        modal.remove(); // Remove modal after cancelling the download
+    Object.assign(cancelButton.style, {
+        padding: '10px 20px', borderRadius: '8px', border: 'none',
+        backgroundColor: '#ef4444', color: '#fff', cursor: 'pointer', fontWeight: 'bold'
+    });
+    cancelButton.onclick = function () {
+        modal.remove();
+        console.log('DDAS: User chose to cancel duplicate download.');
     };
-    modalContent.appendChild(cancelButton);
+    btnRow.appendChild(cancelButton);
 
-    // Add "Continue Download" button
     const continueButton = document.createElement('button');
     continueButton.textContent = 'Continue Download';
-    continueButton.onclick = function() {
-        // Call the Chrome API to resume the download
-        chrome.runtime.sendMessage({ action: 'continueDownload', downloadId: downloadId });
-        modal.remove(); // Remove modal after resuming the download
+    Object.assign(continueButton.style, {
+        padding: '10px 20px', borderRadius: '8px', border: 'none',
+        backgroundColor: '#22c55e', color: '#fff', cursor: 'pointer', fontWeight: 'bold'
+    });
+    continueButton.onclick = function () {
+        continueButton.textContent = 'Downloading...';
+        continueButton.disabled = true;
+        chrome.runtime.sendMessage(
+            { action: 'continueDownload', downloadId, downloadUrl },
+            function (response) {
+                if (response && response.success) {
+                    continueButton.textContent = 'Download Started ✓';
+                    setTimeout(() => modal.remove(), 1000);
+                } else {
+                    continueButton.textContent = 'Failed ✗';
+                    continueButton.style.backgroundColor = '#ef4444';
+                    console.warn('DDAS: Re-download failed:', response);
+                }
+            }
+        );
     };
-    modalContent.appendChild(continueButton);
+    btnRow.appendChild(continueButton);
 
-    // Append the modal content to the modal container
-    modal.appendChild(modalContent);
-
-    // Append the modal to the body
+    card.appendChild(btnRow);
+    modal.appendChild(card);
     document.body.appendChild(modal);
 }
 
-// Listen for download creation events
+// -------------------------------------------------------
+// Listen for new downloads
+// -------------------------------------------------------
 chrome.downloads.onCreated.addListener(function (downloadItem) {
     const downloadId = downloadItem.id;
-    const downloadUrl = downloadItem.url;
+    const rawUrl = downloadItem.url;
+    const downloadUrl = normalizeUrl(rawUrl);
 
-    // Check if the download URL already exists in the hash table
-    chrome.storage.sync.get({ downloadLinksTable: {} }, function (result) {
-        let downloadLinksTable = result.downloadLinksTable;
+    getStorage(function (result) {
+        const downloadLinksTable = result.downloadLinksTable;
+        const pendingDownloads = result.pendingDownloads;
 
-        if (Object.values(downloadLinksTable).includes(downloadUrl)) {
-            // If the download URL is already in the hash table, pause the download and show the custom modal
-            chrome.downloads.pause(downloadId, function() {
+        if (downloadLinksTable[downloadUrl]) {
+            // Duplicate — cancel immediately (works even for tiny files)
+            chrome.downloads.cancel(downloadId, function () {
                 if (chrome.runtime.lastError) {
-                    console.log("Failed to pause download:", chrome.runtime.lastError);
-                } else {
-                    console.log('Download paused for duplicate URL:', downloadUrl);
-                    showAlertInActiveTab(downloadId, downloadUrl); // Show custom modal after pausing
+                    console.warn('DDAS: Could not cancel (already done):', chrome.runtime.lastError.message);
                 }
+                console.log('DDAS: Duplicate detected, alerting user:', downloadUrl);
+                showAlertInActiveTab(downloadId, rawUrl);
             });
         } else {
-            // Add a flag in storage to indicate that the URL needs to be added after completion
-            chrome.storage.sync.get({ pendingDownloads: {} }, function (result) {
-                let pendingDownloads = result.pendingDownloads || {};
-                pendingDownloads[downloadId] = downloadUrl;
-
-                chrome.storage.sync.set({ pendingDownloads: pendingDownloads }, function () {
-                    console.log('Pending download link stored:', downloadUrl);
-                });
+            pendingDownloads[downloadId] = downloadUrl;
+            setStorage({ pendingDownloads }, function () {
+                console.log('DDAS: Tracking pending download:', downloadUrl);
             });
         }
     });
-});
-
-// Listen for download changes to track completion and cancellation
-chrome.downloads.onChanged.addListener(function (downloadDelta) {
-    const downloadId = downloadDelta.id;
-
-    if (downloadDelta.state) {
-        if (downloadDelta.state.current === "complete") {
-            // Handle completed downloads
-            chrome.storage.sync.get({ pendingDownloads: {} }, function (result) {
-                let pendingDownloads = result.pendingDownloads || {};
-                const downloadUrl = pendingDownloads[downloadId];
-
-                if (downloadUrl) {
-                    // Remove the entry from pendingDownloads and add to downloadLinksTable
-                    delete pendingDownloads[downloadId];
-                    chrome.storage.sync.set({ pendingDownloads: pendingDownloads }, function () {
-                        console.log('Pending download link removed:', downloadUrl);
-                    });
-
-                    chrome.storage.sync.get({ downloadLinksTable: {} }, function (result) {
-                        let downloadLinksTable = result.downloadLinksTable || {};
-                        downloadLinksTable[downloadId] = downloadUrl;
-
-                        chrome.storage.sync.set({ downloadLinksTable: downloadLinksTable }, function () {
-                            console.log('Download link added to table:', downloadUrl);
-                        });
-                    });
-                }
-            });
-        } else if (downloadDelta.state.current === "interrupted") {
-            // Handle canceled or interrupted downloads
-            chrome.storage.sync.get({ pendingDownloads: {} }, function (result) {
-                let pendingDownloads = result.pendingDownloads || {};
-                const downloadUrl = pendingDownloads[downloadId];
-
-                if (downloadUrl) {
-                    // Remove the entry from pendingDownloads if the download is interrupted
-                    delete pendingDownloads[downloadId];
-                    chrome.storage.sync.set({ pendingDownloads: pendingDownloads }, function () {
-                        console.log('Pending download link removed due to interruption:', downloadUrl);
-                    });
-                }
-            });
-        }
-    }
-});
-
-
-// Listen for messages from the content script to handle download actions
-chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
-    if (message.action === 'cancelDownload') {
-        chrome.downloads.cancel(message.downloadId, function() {
-            console.log('Download canceled:', message.downloadId);
-        });
-    } else if (message.action === 'continueDownload') {
-        chrome.downloads.resume(message.downloadId, function() {
-            console.log('Download resumed:', message.downloadId);
-        });
-    }
 });
