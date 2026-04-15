@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
 
-    // FIX: Use chrome.storage.local (matches background.js)
     chrome.storage.local.get({ downloadLinksTable: {} }, function (result) {
         const downloadLinksTable = result.downloadLinksTable;
         const linkList = document.getElementById('downloadLinks');
@@ -15,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         emptyMsg.style.display = 'none';
 
-        // FIX: Value is now { downloadId, timestamp } — not a raw string
+       
         entries.forEach(([url, meta]) => {
             const li = document.createElement('li');
 
@@ -34,9 +33,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Clear all download history
+
     document.getElementById('clearAll').addEventListener('click', function () {
-        // FIX: Use chrome.storage.local
+       
         chrome.storage.local.set({ downloadLinksTable: {}, pendingDownloads: {} }, function () {
             console.log('DDAS: Download history cleared.');
         });
