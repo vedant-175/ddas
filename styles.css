@@ -1,17 +1,106 @@
-ul{
-    list-style-type:disc;
-    color: black;
-    text-decoration: none;
-    padding: 0px;
-    padding:15px;
-
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
-#clearall{
-    border-radius: 20%;
-    border:1px solid black;
+body {
+    width: 380px;
+    font-family: 'Segoe UI', sans-serif;
+    background: #f9fafb;
+    color: #1f2937;
+    padding-bottom: 16px;
 }
 
-body{
-    width: 650px;
+.header {
+    background: #1e3a5f;
+    color: white;
+    padding: 14px 16px 12px;
+    text-align: center;
+}
+
+.logo {
+    font-size: 22px;
+}
+
+.header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-top: 2px;
+}
+
+.header .subtitle {
+    font-size: 10px;
+    opacity: 0.7;
+    margin-top: 2px;
+    letter-spacing: 0.5px;
+}
+
+.section-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6b7280;
+    padding: 12px 16px 6px;
+}
+
+.empty {
+    font-size: 13px;
+    color: #9ca3af;
+    text-align: center;
+    padding: 20px 16px;
+    display: none;
+}
+
+/* FIX: selector now matches id="downloadLinks" */
+ul#downloadLinks {
+    list-style: none;
+    padding: 0 12px;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+ul#downloadLinks li {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+ul#downloadLinks li .url {
+    font-size: 12px;
+    color: #1d4ed8;
+    word-break: break-all;
+    font-weight: 500;
+}
+
+ul#downloadLinks li .meta {
+    font-size: 11px;
+    color: #9ca3af;
+}
+
+/* FIX: selector matches id="clearAll" (camelCase) */
+#clearAll {
+    display: block;
+    margin: 12px 16px 0;
+    width: calc(100% - 32px);
+    padding: 9px;
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+#clearAll:hover {
+    background: #dc2626;
 }
