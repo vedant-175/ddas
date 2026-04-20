@@ -1,21 +1,26 @@
 {
   "manifest_version": 3,
-  "name": "Download Duplicate Detection",
-  "version": "1.2",
+  "name": "DDAS - Download Duplicate Alert",
+  "version": "1.5",
   "permissions": [
-      "downloads",
-      "storage",
-      "scripting",
-      "activeTab"
+    "downloads",
+    "storage",
+    "scripting",
+    "activeTab",
+    "tabs",
+    "notifications"
+  ],
+  "host_permissions": [
+    "<all_urls>"
   ],
   "background": {
-      "service_worker": "background.js"
+    "service_worker": "background.js"
   },
   "action": {
-      "default_popup": "popup.html",
-      "default_icon": "icon.png"
+    "default_popup": "popup.html",
+    "default_icon": "icon.png"
   },
   "icons": {
-      "48": "icon.png"
+    "48": "icon.png"
   }
 }
