@@ -1,13 +1,23 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Download Links</title>
+    <title>DDAS</title>
     <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
 <body>
-    <h1>Download Links</h1>
+    <div class="header">
+        <span class="logo">⚠️</span>
+        <h1>DDAS</h1>
+        <p class="subtitle">Download Duplicate Alert System</p>
+    </div>
+
+    <div class="section-title">Downloaded Files</div>
+    <p id="emptyMsg" class="empty">No downloads tracked yet.</p>
     <ul id="downloadLinks"></ul>
-    <button id="clearAll">Clear All</button>
+
+    <!-- FIX: id matches JS selector exactly -->
+    <button id="clearAll">Clear History</button>
+
     <script src="popup.js"></script>
 </body>
 </html>
