@@ -82,7 +82,6 @@ ddas/
 ---
 
 ## 📸 Screenshots
-(Add your project screenshots here)
 <img width="552" height="356" alt="image" src="https://github.com/user-attachments/assets/75580d02-74fb-4b1e-b987-8537d75b4ea9" />
 <img width="539" height="471" alt="image" src="https://github.com/user-attachments/assets/1bb0c4f4-d2f1-4a47-89cf-74e7868363d5" />
 
