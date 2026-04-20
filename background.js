@@ -1,3 +1,8 @@
+// ============================================================
+// DDAS - Data Download Duplication Alert System
+// background.js (Service Worker)
+// ============================================================
+
 function getStorage(callback) {
     chrome.storage.local.get({ downloadLinksTable: {}, pendingDownloads: {} }, callback);
 }
@@ -202,4 +207,65 @@ chrome.downloads.onCreated.addListener(function (downloadItem) {
             });
         }
     });
+});
+
+// -------------------------------------------------------
+// Listen for download state changes
+// -------------------------------------------------------
+chrome.downloads.onChanged.addListener(function (downloadDelta) {
+    const downloadId = downloadDelta.id;
+    if (!downloadDelta.state) return;
+
+    const currentState = downloadDelta.state.current;
+
+    getStorage(function (result) {
+        let { downloadLinksTable, pendingDownloads } = result;
+        const downloadUrl = pendingDownloads[downloadId];
+
+        if (!downloadUrl) return;
+
+        if (currentState === 'complete') {
+            downloadLinksTable[downloadUrl] = {
+                downloadId,
+                timestamp: new Date().toISOString()
+            };
+            delete pendingDownloads[downloadId];
+            setStorage({ downloadLinksTable, pendingDownloads }, function () {
+                console.log('DDAS: Download complete, saved to table:', downloadUrl);
+            });
+
+        } else if (currentState === 'interrupted') {
+            delete pendingDownloads[downloadId];
+            setStorage({ pendingDownloads }, function () {
+                console.log('DDAS: Download interrupted, removed from pending:', downloadUrl);
+            });
+        }
+    });
+});
+
+// -------------------------------------------------------
+// Message listener
+// -------------------------------------------------------
+chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+    if (message.action === 'cancelDownload') {
+        console.log('DDAS: User confirmed cancel for download:', message.downloadId);
+        sendResponse({ success: true });
+        return true;
+
+    } else if (message.action === 'continueDownload') {
+        if (!message.downloadUrl) {
+            sendResponse({ success: false, error: 'No URL provided' });
+            return true;
+        }
+        chrome.downloads.download({ url: message.downloadUrl }, function (newDownloadId) {
+            if (chrome.runtime.lastError) {
+                console.warn('DDAS: Re-download error:', chrome.runtime.lastError.message);
+                sendResponse({ success: false, error: chrome.runtime.lastError.message });
+            } else {
+                console.log('DDAS: Re-download started, new ID:', newDownloadId);
+                sendResponse({ success: true });
+            }
+        });
+        return true;
+    }
 });
