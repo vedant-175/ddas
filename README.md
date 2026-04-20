@@ -1,199 +1,106 @@
 # 🚀 DDAS (Dynamic Data Automation System)
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Status-Active-success?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Version-1.0-blue?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Tech-HTML%20%7C%20CSS%20%7C%20JavaScript-orange?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Status-Completed-success?style=for-the-badge" />
   <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" />
 </p>
 
 ---
 
-## 📌 Table of Contents
-- Overview
-- Problem Statement
-- Solution
-- Tech Stack
-- System Architecture
-- Features
-- Installation & Setup
-- Environment Variables
-- Usage
-- API Endpoints
-- Project Structure
-- Screenshots
-- Performance & Optimization
-- Security
-- Future Scope
-- Contributing
-- License
-- Author
-
----
-
 ## 📖 Overview
-DDAS (Dynamic Data Automation System) is a scalable and efficient software solution designed to automate data handling, processing, and management tasks. It improves productivity, reduces manual effort, and ensures high performance with a clean and modular architecture.
+DDAS (Dynamic Data Automation System) is a frontend-based web project built using **HTML, CSS, and JavaScript**.  
+It focuses on providing an interactive and user-friendly interface for handling and displaying data efficiently.
 
 ---
 
 ## ❗ Problem Statement
-Managing large volumes of data manually can lead to:
-- Human errors  
-- Inefficient workflows  
-- Time-consuming processes  
-- Poor scalability  
+Traditional static web pages lack interactivity and dynamic behavior, which results in:
+- Poor user experience  
+- Limited functionality  
+- No real-time interaction  
 
 ---
 
 ## 💡 Solution
-DDAS solves these issues by:
-- Automating repetitive tasks  
-- Providing structured data flow  
-- Ensuring faster execution  
-- Offering a scalable architecture  
+This project solves these issues by:
+- Adding dynamic behavior using JavaScript  
+- Creating responsive UI with CSS  
+- Structuring content effectively with HTML  
 
 ---
 
 ## 🛠️ Tech Stack
-
-### Frontend
-- HTML5  
-- CSS3  
-- JavaScript (ES6+)  
-
-### Backend
-- Node.js  
-- Express.js  
-
-### Database
-- MongoDB / PostgreSQL  
-
-### Tools & Technologies
-- Git & GitHub  
-- REST APIs  
-- JSON  
-
----
-
-## 🏗️ System Architecture
-```
-Client (Frontend)
-       ↓
-Server (Node.js / Express)
-       ↓
-Database (MongoDB / PostgreSQL)
-```
+- **HTML5** – Structure of the application  
+- **CSS3** – Styling and responsiveness  
+- **JavaScript (ES6)** – Logic and interactivity  
 
 ---
 
 ## ✨ Features
-
-### Core Features
-- Fast and efficient data processing  
-- Secure data handling  
-- Structured data management  
-- Real-time updates (if applicable)  
-
-### Advanced Features
-- Modular codebase  
-- Easy API integration  
-- Responsive design  
-- Error handling and validation  
+- 🎯 Clean and modern UI  
+- ⚡ Interactive elements using JavaScript  
+- 📱 Responsive design  
+- 🔄 Dynamic content updates  
+- 🧩 Easy to understand code structure  
 
 ---
 
-## ⚙️ Installation & Setup
+## ⚙️ How to Run
 
-### 1. Clone the Repository
+1. Clone the repository:
 ```bash
 git clone https://github.com/vedant-175/ddas.git
-cd ddas
 ```
 
-### 2. Install Dependencies
-```bash
-npm install
-```
+2. Open Chrome Extension and there you will find the developer mode enable it.
 
-### 3. Setup Environment Variables
-Create a `.env` file in the root directory:
-```env
-PORT=5000
-DB_URI=your_database_url
-```
+3. Load the the clone folder in the extension
 
-### 4. Run the Application
-```bash
-npm start
+4. Enable the DDAS extension
+
+## 📂 Project Structure
+```
+ddas/
+│── popup.html        # Main HTML file
+│── style.css         # Styling
+│── background.js     # JavaScript logic #1
+│── popup.js          # Javascript logic #2
+│── README.md         # Documentation
+│── icon.png          # Image
+│── test.txt          # Testing
+│── manifest.json
 ```
 
 ---
 
 ## ▶️ Usage
-1. Start the server  
-2. Open browser and go to:
-```
-http://localhost:5000
-```
-3. Use the application features  
-
----
-
-## 🔗 API Endpoints
-
-| Method | Endpoint        | Description        |
-|--------|----------------|--------------------|
-| GET    | /api/data      | Fetch all data     |
-| POST   | /api/data      | Add new data       |
-| PUT    | /api/data/:id  | Update data        |
-| DELETE | /api/data/:id  | Delete data        |
-
----
-
-## 📂 Project Structure
-```
-ddas/
-│── src/
-│   ├── controllers/
-│   ├── models/
-│   ├── routes/
-│   ├── middleware/
-│
-│── public/
-│── config/
-│── .env
-│── package.json
-│── README.md
-```
+- Open the website  
+- Interact with UI elements  
+- Perform actions based on project functionality  
 
 ---
 
 ## 📸 Screenshots
-(Add screenshots here)
+(Add your project screenshots here)
+<img width="552" height="356" alt="image" src="https://github.com/user-attachments/assets/75580d02-74fb-4b1e-b987-8537d75b4ea9" />
+<img width="539" height="471" alt="image" src="https://github.com/user-attachments/assets/1bb0c4f4-d2f1-4a47-89cf-74e7868363d5" />
+
 
 ---
 
-## ⚡ Performance & Optimization
-- Optimized database queries  
-- Efficient API handling  
-- Reduced response time  
-- Scalable backend design  
+## ⚡ Performance
+- Lightweight project  
+- Fast loading  
+- Optimized frontend structure  
 
 ---
 
-## 🔐 Security
-- Input validation  
-- Error handling  
-- Environment variable protection  
-- Secure API practices  
-
----
-
-## 🚧 Future Scope
-- Authentication & Authorization (JWT)  
-- Admin dashboard  
-- Cloud deployment (AWS / Vercel)  
-- Advanced analytics  
-- Mobile app integration  
+## 🚧 Future Improvements
+- Add backend integration  
+- Store data using database  
+- Improve UI/UX design  
+- Add more advanced features  
 
 ---
 
@@ -216,16 +123,9 @@ This project is licensed under the MIT License.
 
 ## 👨‍💻 Author
 Vedant  
-GitHub: https://github.com/vedant-175/ddas  
+GitHub: https://github.com/vedant-175  
 
 ---
 
 ## ⭐ Support
-If you like this project, give it a star on GitHub.
-
----
-
-## 📢 Acknowledgements
-- Open-source community  
-- Contributors  
-- Learning resources  
+If you like this project, give it a ⭐ on GitHub!
